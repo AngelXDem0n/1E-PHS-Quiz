@@ -1,1665 +1,1033 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPRJ Quiz Arena</title>
-    <style>
-        :root {
-            --bg: #0a0a14;
-            --surface: #151525;
-            --card: #1a1a30;
-            --text: #e8e8f0;
-            --text-secondary: #a0a0c0;
-            --accent: #7c3aed;
-            --accent-glow: #a78bfa;
-            --accent2: #06b6d4;
-            --accent3: #f59e0b;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --border: rgba(255, 255, 255, 0.08);
-            --glass: rgba(20, 20, 45, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-            --radius: 18px;
-            --radius-sm: 10px;
-            --transition: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
-            --font-main: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
-            --font-display: 'Orbitron', 'Segoe UI', sans-serif;
-        }
-        [data-theme="light"] {
-            --bg: #f0f0f8;
-            --surface: #e8e8f4;
-            --card: #ffffff;
-            --text: #1a1a2e;
-            --text-secondary: #555;
-            --border: rgba(0, 0, 0, 0.1);
-            --glass: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(0, 0, 0, 0.15);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: var(--font-main);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background 0.5s, color 0.5s;
-            position: relative;
-        }
-        /* Animated gradient background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.18) 0%, transparent 55%),
-                radial-gradient(ellipse at 80% 60%, rgba(6, 182, 212, 0.12) 0%, transparent 55%),
-                radial-gradient(ellipse at 50% 90%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-            animation: bgShift 18s ease-in-out infinite;
-        }
-        @keyframes bgShift {
-            0%,
-            100% {
-                opacity: 0.8;
-            }
-            33% {
-                opacity: 1;
-            }
-            66% {
-                opacity: 0.6;
-            }
-        }
-        #particlesCanvas {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-        /* Loading Screen */
-        #loadingScreen {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            background: #06060f;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.7s, visibility 0.7s;
-            font-family: var(--font-display);
-        }
-        #loadingScreen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .loading-logo {
-            font-size: 3.5rem;
-            font-weight: 900;
-            letter-spacing: 6px;
-            background: linear-gradient(135deg, #7c3aed, #06b6d4, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: pulseGlow 1.5s ease-in-out infinite;
-            position: relative;
-        }
-        .loading-logo::after {
-            content: '';
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            border-top-color: #7c3aed;
-            border-right-color: #06b6d4;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(0deg);
-            animation: spinRing 2s linear infinite;
-        }
-        @keyframes spinRing {
-            to {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
-        @keyframes pulseGlow {
-            0%,
-            100% {
-                filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.6));
-            }
-            50% {
-                filter: drop-shadow(0 0 45px rgba(6, 182, 212, 0.8));
-            }
-        }
-        .loading-creator {
-            margin-top: 16px;
-            font-size: 0.95rem;
-            color: #a0a0c0;
-            letter-spacing: 2px;
-            animation: fadeInUp 1s ease 0.3s both;
-        }
-        .loading-bar-wrap {
-            width: 280px;
-            height: 6px;
-            background: #1a1a30;
-            border-radius: 10px;
-            margin-top: 28px;
-            overflow: hidden;
-        }
-        .loading-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #7c3aed, #06b6d4, #a78bfa);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            animation: loadGrow 2.2s ease-in-out forwards;
-        }
-        @keyframes loadGrow {
-            0% {
-                width: 0%;
-            }
-            40% {
-                width: 45%;
-            }
-            70% {
-                width: 78%;
-            }
-            100% {
-                width: 100%;
-            }
-        }
-        .loading-percent {
-            margin-top: 10px;
-            font-size: 1.2rem;
-            color: #a78bfa;
-            letter-spacing: 2px;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>RPRJ Quiz Arena</title>
+  <style>
+    :root {
+      --bg: #0a0a16;
+      --surface: #13132b;
+      --card: #1a1a36;
+      --text: #f0f0ff;
+      --text-secondary: #b0b0d0;
+      --accent: #7c3aed;
+      --accent-glow: #a78bfa;
+      --accent2: #06b6d4;
+      --accent3: #f59e0b;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(18, 18, 40, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 12px 45px rgba(0, 0, 0, 0.6);
+      --radius: 24px;
+      --radius-sm: 14px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+      --font-main: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
+      --font-display: 'Orbitron', 'Segoe UI', sans-serif;
+      --base-size: 1rem;
+    }
+    [data-theme="light"] {
+      --bg: #f4f4fc;
+      --surface: #eaeaee;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #555;
+      --border: rgba(0, 0, 0, 0.12);
+      --glass: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(0, 0, 0, 0.2);
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+      font-size: 1.1rem;
+    }
+    body {
+      font-family: var(--font-main);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.5s, color 0.5s;
+      position: relative;
+      font-size: var(--base-size);
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 25% 15%, rgba(124, 58, 237, 0.2) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 55%, rgba(6, 182, 212, 0.15) 0%, transparent 55%),
+        radial-gradient(ellipse at 40% 90%, rgba(245, 158, 11, 0.12) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: bgShift 20s ease-in-out infinite;
+    }
+    @keyframes bgShift {
+      0%, 100% { opacity: 0.8; }
+      33% { opacity: 1; }
+      66% { opacity: 0.6; }
+    }
+    #particlesCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Loading Screen */
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #06060f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.7s, visibility 0.7s;
+      font-family: var(--font-display);
+    }
+    #loadingScreen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .loading-logo {
+      font-size: 5rem;
+      font-weight: 900;
+      letter-spacing: 8px;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: pulseGlow 1.8s ease-in-out infinite;
+      position: relative;
+    }
+    .loading-logo::after {
+      content: '';
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 4px solid transparent;
+      border-top-color: #7c3aed;
+      border-right-color: #06b6d4;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      animation: spinRing 2.5s linear infinite;
+    }
+    @keyframes spinRing { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.7)); }
+      50% { filter: drop-shadow(0 0 60px rgba(6, 182, 212, 0.9)); }
+    }
+    .loading-creator {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #c0c0e0;
+      letter-spacing: 3px;
+      animation: fadeInUp 1s ease 0.4s both;
+    }
+    .loading-bar-wrap {
+      width: 340px;
+      height: 8px;
+      background: #1a1a30;
+      border-radius: 12px;
+      margin-top: 35px;
+      overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7c3aed, #06b6d4, #a78bfa);
+      border-radius: 12px;
+      animation: loadGrow 2.5s ease-in-out forwards;
+    }
+    @keyframes loadGrow { 0% { width: 0%; } 50% { width: 55%; } 80% { width: 88%; } 100% { width: 100%; } }
+    .loading-percent {
+      margin-top: 14px;
+      font-size: 1.5rem;
+      color: #a78bfa;
+      letter-spacing: 3px;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Main App */
-        #app {
-            position: relative;
-            z-index: 1;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s 0.3s, transform 0.6s 0.3s;
-        }
-        #app.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .screen {
-            display: none;
-            animation: screenIn 0.5s ease;
-        }
-        .screen.active {
-            display: block;
-        }
-        @keyframes screenIn {
-            from {
-                opacity: 0;
-                transform: translateY(25px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    #app {
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s 0.4s, transform 0.7s 0.4s;
+    }
+    #app.visible { opacity: 1; transform: translateY(0); }
+    .screen {
+      display: none;
+      animation: screenIn 0.5s ease;
+    }
+    .screen.active { display: block; }
+    @keyframes screenIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Navigation */
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 24px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .nav-brand {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #7c3aed, #06b6d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            cursor: pointer;
-        }
-        .nav-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 10px 20px;
-            border-radius: 25px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: var(--transition);
-            font-family: var(--font-main);
-            font-size: 0.9rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-primary {
-            background: #7c3aed;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-        }
-        .btn-primary:hover {
-            box-shadow: 0 0 35px rgba(124, 58, 237, 0.7);
-            transform: translateY(-2px);
-        }
-        .btn-accent {
-            background: #06b6d4;
-            color: #000;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-        }
-        .btn-accent:hover {
-            box-shadow: 0 0 35px rgba(6, 182, 212, 0.7);
-            transform: translateY(-2px);
-        }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--glass-border);
-            color: var(--text);
-        }
-        .btn-outline:hover {
-            border-color: #7c3aed;
-            box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
-        }
-        .btn-danger {
-            background: #ef4444;
-            color: #fff;
-            box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
-        }
-        .btn-sm {
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            border-radius: 20px;
-        }
-        .btn-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            background: var(--glass);
-            border: 2px solid var(--glass-border);
-            color: var(--text);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .btn-icon:hover {
-            border-color: #7c3aed;
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.35);
-        }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 30px;
+      background: var(--glass);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 1.1rem;
+    }
+    .nav-brand {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      cursor: pointer;
+      user-select: none;
+    }
+    .nav-actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 14px 28px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      transition: var(--transition);
+      font-family: var(--font-main);
+      font-size: 1.05rem;
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+    }
+    .btn-primary {
+      background: #7c3aed;
+      color: #fff;
+      box-shadow: 0 0 28px rgba(124, 58, 237, 0.5);
+    }
+    .btn-primary:hover { box-shadow: 0 0 45px rgba(124, 58, 237, 0.8); transform: translateY(-3px); }
+    .btn-accent {
+      background: #06b6d4;
+      color: #000;
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.5);
+    }
+    .btn-accent:hover { box-shadow: 0 0 40px rgba(6, 182, 212, 0.8); transform: translateY(-3px); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--glass-border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: #7c3aed; box-shadow: 0 0 30px rgba(124, 58, 237, 0.4); }
+    .btn-danger { background: #ef4444; color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+    .btn-sm { padding: 8px 18px; font-size: 0.9rem; border-radius: 24px; }
+    .btn-icon {
+      width: 48px; height: 48px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; background: var(--glass); border: 2px solid var(--glass-border); color: var(--text); cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-icon:hover { border-color: #7c3aed; box-shadow: 0 0 28px rgba(124, 58, 237, 0.5); }
 
-        /* Cards */
-        .card {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 50px rgba(0, 0, 0, 0.55);
-        }
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 18px 60px rgba(0, 0, 0, 0.7); }
 
-        /* Home Screen */
-        .home-hero {
-            text-align: center;
-            padding: 60px 20px 30px;
-        }
-        .home-title {
-            font-family: var(--font-display);
-            font-size: clamp(2.2rem, 5vw, 4rem);
-            font-weight: 900;
-            letter-spacing: 3px;
-            background: linear-gradient(135deg, #7c3aed, #06b6d4, #a78bfa, #f59e0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: titleShimmer 3s ease-in-out infinite;
-            background-size: 300% 300%;
-        }
-        @keyframes titleShimmer {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-        .home-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-            margin: 8px 0 30px;
-        }
-        .home-buttons {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .home-buttons .btn {
-            font-size: 1.1rem;
-            padding: 14px 30px;
-            border-radius: 30px;
-            letter-spacing: 1px;
-        }
+    .home-hero {
+      text-align: center;
+      padding: 80px 30px 50px;
+    }
+    .home-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 8vw, 6rem);
+      font-weight: 900;
+      letter-spacing: 6px;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4, #a78bfa, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: titleShimmer 4s ease-in-out infinite;
+      background-size: 300% 300%;
+    }
+    @keyframes titleShimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    .home-subtitle {
+      font-size: 1.6rem;
+      color: var(--text-secondary);
+      letter-spacing: 2px;
+      margin: 20px 0 40px;
+    }
+    .home-buttons {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .home-buttons .btn { font-size: 1.3rem; padding: 18px 40px; border-radius: 36px; }
 
-        /* Host Dashboard */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 18px;
-            padding: 20px;
-        }
-        .quiz-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            background: var(--surface);
-            border-radius: var(--radius-sm);
-            margin: 8px 0;
-            transition: var(--transition);
-            border: 1px solid var(--border);
-        }
-        .quiz-list-item:hover {
-            border-color: #7c3aed;
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
-        }
-        .badge {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        .badge-purple {
-            background: rgba(124, 58, 237, 0.2);
-            color: #a78bfa;
-        }
-        .badge-cyan {
-            background: rgba(6, 182, 212, 0.2);
-            color: #06b6d4;
-        }
-
-        /* Game Area */
-        .game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-        .question-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 30px 24px;
-            margin: 20px 0;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .question-card.correct-flash {
-            border-color: #22c55e !important;
-            box-shadow: 0 0 50px rgba(34, 197, 94, 0.5) !important;
-            animation: correctPulse 0.6s ease;
-        }
-        .question-card.wrong-flash {
-            border-color: #ef4444 !important;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.5) !important;
-            animation: shake 0.5s ease;
-        }
-        @keyframes correctPulse {
-            0%,
-            100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.03);
-            }
-        }
-        @keyframes shake {
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-            20% {
-                transform: translateX(-8px);
-            }
-            40% {
-                transform: translateX(8px);
-            }
-            60% {
-                transform: translateX(-6px);
-            }
-            80% {
-                transform: translateX(4px);
-            }
-        }
-        .answer-btn {
-            display: block;
-            width: 100%;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            background: var(--surface);
-            color: var(--text);
-            cursor: pointer;
-            font-size: 1rem;
-            transition: var(--transition);
-            text-align: left;
-            font-family: var(--font-main);
-        }
-        .answer-btn:hover {
-            border-color: #7c3aed;
-            background: rgba(124, 58, 237, 0.1);
-            transform: translateX(4px);
-        }
-        .answer-btn.selected-correct {
-            border-color: #22c55e !important;
-            background: rgba(34, 197, 94, 0.2) !important;
-            color: #22c55e !important;
-            animation: correctPulse 0.5s ease;
-        }
-        .answer-btn.selected-wrong {
-            border-color: #ef4444 !important;
-            background: rgba(239, 68, 68, 0.2) !important;
-            color: #ef4444 !important;
-            animation: shake 0.5s ease;
-        }
-        .timer-bar {
-            height: 8px;
-            background: #2a2a40;
-            border-radius: 10px;
-            margin: 16px 0;
-            overflow: hidden;
-        }
-        .timer-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.1s linear, background 0.5s;
-            background: #22c55e;
-        }
-        .timer-fill.warning {
-            background: #f59e0b;
-        }
-        .timer-fill.danger {
-            background: #ef4444;
-            animation: pulseDanger 0.5s infinite;
-        }
-        @keyframes pulseDanger {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-        .score-pop {
-            position: fixed;
-            pointer-events: none;
-            font-weight: 900;
-            font-size: 2rem;
-            z-index: 200;
-            animation: scoreFly 1.2s ease-out forwards;
-        }
-        @keyframes scoreFly {
-            0% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-120px) scale(1.8);
-            }
-        }
-
-        /* Leaderboard */
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .leaderboard-table th,
-        .leaderboard-table td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        .leaderboard-table th {
-            font-family: var(--font-display);
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-        }
-        .rank-1 {
-            color: #f59e0b;
-            font-weight: 900;
-            font-size: 1.4rem;
-        }
-        .rank-2 {
-            color: #c0c0c0;
-            font-weight: 700;
-        }
-        .rank-3 {
-            color: #cd7f32;
-            font-weight: 600;
-        }
-        .rank-change-up {
-            color: #22c55e;
-            animation: bounceUp 0.5s ease;
-        }
-        .rank-change-down {
-            color: #ef4444;
-        }
-        @keyframes bounceUp {
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-6px);
-            }
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 28px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--glass-border);
-            animation: zoomIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        @keyframes zoomIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        .modal h3 {
-            font-family: var(--font-display);
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-        }
-        .input-field {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 25px;
-            border: 2px solid var(--border);
-            background: var(--surface);
-            color: var(--text);
-            font-family: var(--font-main);
-            font-size: 0.95rem;
-            margin: 8px 0;
-            transition: var(--transition);
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
-        }
-
-        /* Confetti */
-        .confetti-piece {
-            position: fixed;
-            z-index: 400;
-            pointer-events: none;
-            animation: confettiFall 2.5s ease-out forwards;
-        }
-        @keyframes confettiFall {
-            0% {
-                opacity: 1;
-                transform: translateY(-100vh) rotate(0deg) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(105vh) rotate(720deg) scale(0.3);
-            }
-        }
-
-        /* Podium */
-        .podium {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 12px;
-            margin: 30px 0;
-            flex-wrap: wrap;
-        }
-        .podium-spot {
-            text-align: center;
-            padding: 20px;
-            border-radius: var(--radius-sm);
-            min-width: 100px;
-            animation: podiumRise 0.7s ease-out;
-        }
-        .podium-1 {
-            background: linear-gradient(180deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.05));
-            border: 2px solid #f59e0b;
-            min-height: 200px;
-        }
-        .podium-2 {
-            background: linear-gradient(180deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.03));
-            border: 2px solid #c0c0c0;
-            min-height: 160px;
-        }
-        .podium-3 {
-            background: linear-gradient(180deg, rgba(205, 127, 50, 0.2), rgba(205, 127, 50, 0.03));
-            border: 2px solid #cd7f32;
-            min-height: 130px;
-        }
-        @keyframes podiumRise {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            margin-top: 40px;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-        .footer strong {
-            color: #a78bfa;
-            font-family: var(--font-display);
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .navbar {
-                padding: 8px 12px;
-            }
-            .nav-brand {
-                font-size: 1rem;
-            }
-            .home-title {
-                font-size: 2rem;
-            }
-            .btn {
-                padding: 8px 14px;
-                font-size: 0.8rem;
-            }
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                padding: 10px;
-            }
-            .game-container {
-                padding: 10px;
-            }
-            .question-card {
-                padding: 16px 12px;
-            }
-        }
-    </style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      padding: 28px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    .quiz-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 22px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      font-size: 1.1rem;
+    }
+    .badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+    }
+    .badge-purple { background: rgba(124, 58, 237, 0.25); color: #a78bfa; }
+    .game-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px;
+      text-align: center;
+    }
+    .question-card {
+      background: var(--glass);
+      backdrop-filter: blur(25px);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 40px 30px;
+      margin: 28px 0;
+      box-shadow: var(--shadow);
+      font-size: 1.2rem;
+    }
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 20px 28px;
+      margin: 12px 0;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.15rem;
+      transition: var(--transition);
+      text-align: left;
+      font-weight: 600;
+    }
+    .answer-btn:hover { border-color: #7c3aed; background: rgba(124, 58, 237, 0.15); transform: translateX(8px); }
+    .timer-bar { height: 10px; background: #2a2a40; border-radius: 12px; margin: 20px 0; overflow: hidden; }
+    .timer-fill { height: 100%; border-radius: 12px; background: #22c55e; transition: width 0.1s linear; }
+    .timer-fill.warning { background: #f59e0b; }
+    .timer-fill.danger { background: #ef4444; animation: pulseDanger 0.6s infinite; }
+    @keyframes pulseDanger { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin: 40px 0; flex-wrap: wrap; }
+    .podium-spot { text-align: center; padding: 24px; border-radius: var(--radius-sm); min-width: 140px; animation: podiumRise 0.8s ease-out; }
+    .podium-1 { background: linear-gradient(180deg, rgba(245,158,11,0.35), rgba(245,158,11,0.05)); border: 2px solid #f59e0b; min-height: 240px; }
+    .podium-2 { background: linear-gradient(180deg, rgba(192,192,192,0.25), rgba(192,192,192,0.03)); border: 2px solid #c0c0c0; min-height: 190px; }
+    .podium-3 { background: linear-gradient(180deg, rgba(205,127,50,0.25), rgba(205,127,50,0.03)); border: 2px solid #cd7f32; min-height: 160px; }
+    @keyframes podiumRise { from{opacity:0;transform:translateY(50px);} to{opacity:1;transform:translateY(0);} }
+    .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 1.1rem; }
+    .leaderboard-table th, .leaderboard-table td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 300; display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s;
+    }
+    .modal {
+      background: var(--card); border-radius: var(--radius); padding: 36px; max-width: 650px; width: 92%; max-height: 85vh;
+      overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--glass-border); animation: zoomIn 0.35s;
+    }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    @keyframes zoomIn { from{opacity:0;transform:scale(0.9);} to{opacity:1;transform:scale(1);} }
+    .input-field {
+      width: 100%; padding: 16px 20px; border-radius: 30px; border: 2px solid var(--border); background: var(--surface);
+      color: var(--text); font-family: var(--font-main); font-size: 1.1rem; margin: 10px 0; transition: var(--transition);
+    }
+    .input-field:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 25px rgba(124,58,237,0.35); }
+    .avatar-grid {
+      display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; margin: 25px 0;
+    }
+    .avatar-option {
+      font-size: 4rem; padding: 18px; border-radius: 24px; background: var(--surface); border: 2px solid var(--border);
+      cursor: pointer; transition: var(--transition); position: relative; user-select: none;
+    }
+    .avatar-option.taken { opacity: 0.4; filter: grayscale(70%); cursor: not-allowed; }
+    .avatar-option.taken::after { content: '✖'; position: absolute; top: 5px; right: 5px; font-size: 2rem; color: #ef4444; }
+    .avatar-option.selected { border-color: #7c3aed; box-shadow: 0 0 35px rgba(124,58,237,0.6); transform: scale(1.1); }
+    @media (max-width: 700px) {
+      .navbar { padding: 12px 16px; } .nav-brand { font-size: 1.3rem; } .btn { padding: 10px 18px; font-size: 0.95rem; }
+      .home-title { font-size: 3rem; }
+    }
+  </style>
 </head>
 <body>
+  <canvas id="particlesCanvas"></canvas>
 
-    <!-- Particles Canvas -->
-    <canvas id="particlesCanvas"></canvas>
+  <div id="loadingScreen">
+    <div class="loading-logo">RPRJ</div>
+    <div class="loading-creator">Created by Jarus</div>
+    <div class="loading-bar-wrap"><div class="loading-bar-fill" id="loadBar"></div></div>
+    <div class="loading-percent" id="loadPercent">0%</div>
+  </div>
 
-    <!-- ==================== LOADING SCREEN ==================== -->
-    <div id="loadingScreen">
-        <div class="loading-logo">RPRJ</div>
-        <div class="loading-creator">Created by Jarus</div>
-        <div class="loading-bar-wrap">
-            <div class="loading-bar-fill" id="loadBar"></div>
+  <div id="app">
+    <nav class="navbar">
+      <span class="nav-brand" id="logoClickTarget" title="⚡ RPRJ Quiz Arena">⚡ RPRJ Quiz Arena</span>
+      <div class="nav-actions">
+        <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+        <button class="btn-icon" onclick="toggleSound()" id="soundBtn" title="Toggle Sound">🔊</button>
+        <button class="btn-icon" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+      </div>
+    </nav>
+
+    <!-- HOME SCREEN (Players only see Join and Settings) -->
+    <div class="screen active" id="screen-home">
+      <div class="home-hero">
+        <h1 class="home-title">RPRJ Quiz Arena</h1>
+        <p class="home-subtitle">The Ultimate Classroom Challenge</p>
+        <div class="home-buttons">
+          <button class="btn btn-accent" onclick="openJoinModal()">🎮 Join Game</button>
+          <button class="btn btn-outline" onclick="openSettingsModal()">⚙️ Settings</button>
         </div>
-        <div class="loading-percent" id="loadPercent">0%</div>
+        <p style="margin-top:30px; color:var(--text-secondary); font-size:0.9rem;">Host? Click the logo 5 times quickly.</p>
+      </div>
     </div>
 
-    <!-- ==================== MAIN APP ==================== -->
-    <div id="app">
-        <!-- Navbar -->
-        <nav class="navbar">
-            <span class="nav-brand" onclick="showScreen('home')">⚡ RPRJ Quiz Arena</span>
-            <div class="nav-actions">
-                <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
-                <button class="btn-icon" onclick="toggleSound()" title="Toggle Sound" id="soundBtn">🔊</button>
-                <button class="btn-icon" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
-                <button class="btn btn-outline btn-sm" onclick="showScreen('home')">🏠 Home</button>
+    <!-- HOST DASHBOARD (admin only) -->
+    <div class="screen" id="screen-host">
+      <div style="max-width:1300px; margin:0 auto; padding:28px;">
+        <h2 style="font-family:var(--font-display); letter-spacing:3px; margin-bottom:24px; font-size:2rem;">🎯 Admin Panel</h2>
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3 style="font-size:1.5rem;">📋 Quiz Questions</h3>
+            <div id="quizList" style="max-height:350px; overflow-y:auto;">
+              <p style="color:var(--text-secondary);">Loading...</p>
             </div>
-        </nav>
-
-        <!-- ==================== HOME SCREEN ==================== -->
-        <div class="screen active" id="screen-home">
-            <div class="home-hero">
-                <h1 class="home-title">RPRJ Quiz Arena</h1>
-                <p class="home-subtitle">The Ultimate Classroom Challenge</p>
-                <div class="home-buttons">
-                    <button class="btn btn-accent" onclick="showJoinModal()">🎮 Join Game</button>
-                    <button class="btn btn-primary" onclick="showScreen('host')">🎯 Host Game</button>
-                    <button class="btn btn-outline" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
-                    <button class="btn btn-outline" onclick="showSettings()">⚙️ Settings</button>
-                </div>
+            <button class="btn btn-primary" style="margin-top:18px;" onclick="openQuizEditor()">✏️ Edit Questions</button>
+          </div>
+          <div class="card">
+            <h3 style="font-size:1.5rem;">🎮 Game Controls</h3>
+            <p id="hostStatus" style="color:var(--text-secondary); font-size:1.1rem;">No active game.</p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
+              <button class="btn btn-accent" id="btnStartGame" onclick="hostStartGame()" disabled>▶ Start Game</button>
+              <button class="btn btn-outline btn-sm" onclick="hostResetLeaderboard()">🔄 Reset Scores</button>
             </div>
-        </div>
-
-        <!-- ==================== HOST DASHBOARD ==================== -->
-        <div class="screen" id="screen-host">
-            <div style="max-width:1000px;margin:0 auto;padding:20px;">
-                <h2 style="font-family:var(--font-display);letter-spacing:2px;margin-bottom:16px;">🎯 Host Dashboard</h2>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h3>📋 Your Quizzes</h3>
-                        <div id="quizList" style="max-height:300px;overflow-y:auto;">
-                            <p style="color:var(--text-secondary);">No quizzes yet. Create one!</p>
-                        </div>
-                        <button class="btn btn-primary" style="margin-top:12px;" onclick="showQuizEditor()">+ Create New Quiz</button>
-                    </div>
-                    <div class="card">
-                        <h3>🎮 Game Controls</h3>
-                        <p id="hostStatus" style="color:var(--text-secondary);">No active game. Select a quiz and start.</p>
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                            <button class="btn btn-accent btn-sm" id="btnStartGame" onclick="hostStartGame()">▶ Start</button>
-                            <button class="btn btn-outline btn-sm" id="btnPauseGame" onclick="hostPauseGame()" disabled>⏸ Pause</button>
-                            <button class="btn btn-outline btn-sm" id="btnResumeGame" onclick="hostResumeGame()" disabled>▶ Resume</button>
-                            <button class="btn btn-danger btn-sm" id="btnEndGame" onclick="hostEndGame()" disabled>⏹ End</button>
-                            <button class="btn btn-outline btn-sm" onclick="hostResetLeaderboard()">🔄 Reset LB</button>
-                            <button class="btn btn-outline btn-sm" onclick="hostRandomizeQuestions()">🎲 Randomize</button>
-                        </div>
-                        <p style="margin-top:10px;font-size:0.8rem;color:var(--text-secondary);">
-                            Join Code: <strong id="joinCodeDisplay" style="color:#06b6d4;">----</strong>
-                        </p>
-                    </div>
-                    <div class="card">
-                        <h3>👥 Connected Players (<span id="playerCount">0</span>)</h3>
-                        <div id="playerList" style="max-height:200px;overflow-y:auto;">
-                            <p style="color:var(--text-secondary);">Waiting for players...</p>
-                        </div>
-                    </div>
-                </div>
+            <p style="margin-top:20px; font-size:1rem;">Join Code: <strong id="joinCodeDisplay" style="color:#06b6d4; font-size:1.3rem;">----</strong></p>
+          </div>
+          <div class="card">
+            <h3 style="font-size:1.5rem;">👥 Lobby (<span id="playerCount">0</span>)</h3>
+            <div id="playerList" style="max-height:250px; overflow-y:auto;">
+              <p style="color:var(--text-secondary);">Waiting for players...</p>
             </div>
+          </div>
         </div>
-
-        <!-- ==================== LEADERBOARD SCREEN ==================== -->
-        <div class="screen" id="screen-leaderboard">
-            <div style="max-width:700px;margin:0 auto;padding:20px;">
-                <h2 style="font-family:var(--font-display);letter-spacing:2px;text-align:center;">🏆 Leaderboard</h2>
-                <div id="leaderboardContent" class="card" style="margin-top:16px;">
-                    <p style="text-align:center;color:var(--text-secondary);">No data yet. Play a game to see results!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ==================== GAME PLAY SCREEN ==================== -->
-        <div class="screen" id="screen-game">
-            <div class="game-container" id="gameArea">
-                <!-- Dynamically filled -->
-            </div>
-        </div>
-
-        <!-- ==================== END GAME SCREEN ==================== -->
-        <div class="screen" id="screen-endgame">
-            <div style="max-width:700px;margin:0 auto;padding:20px;text-align:center;" id="endGameContent">
-                <!-- Dynamically filled -->
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <strong>RPRJ</strong> · Created by <strong>Jarus</strong> · © 2024 Quiz Arena
-        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:20px;" onclick="leaveAdmin()">🔒 Leave Admin Panel</button>
+      </div>
     </div>
 
-    <!-- ==================== MODALS ==================== -->
-    <!-- Join Game Modal -->
-    <div class="modal-overlay" id="joinModal" style="display:none;">
-        <div class="modal">
-            <h3>🎮 Join a Game</h3>
-            <input class="input-field" type="text" id="joinName" placeholder="Your Name">
-            <input class="input-field" type="text" id="joinCode" placeholder="Join Code">
-            <div style="display:flex;gap:8px;margin-top:12px;">
-                <button class="btn btn-accent" onclick="joinGame()">Join</button>
-                <button class="btn btn-outline" onclick="closeModal('joinModal')">Cancel</button>
-            </div>
-        </div>
+    <!-- PLAYER LOBBY (after join, icon selection) -->
+    <div class="screen" id="screen-lobby">
+      <div style="max-width:700px; margin:40px auto; text-align:center; padding:30px;">
+        <h2 style="font-family:var(--font-display); font-size:2.5rem;">🐾 Choose Your Icon</h2>
+        <p style="font-size:1.2rem; color:var(--text-secondary); margin:10px 0 25px;">Select an animal (no two players can share)</p>
+        <div class="avatar-grid" id="avatarGrid"></div>
+        <button class="btn btn-primary" id="confirmAvatarBtn" disabled onclick="confirmAvatarSelection()">✅ Confirm & Enter Lobby</button>
+        <p id="lobbyNameDisplay" style="margin-top:16px; font-size:1.2rem;"></p>
+      </div>
     </div>
 
-    <!-- Quiz Editor Modal -->
-    <div class="modal-overlay" id="quizEditorModal" style="display:none;">
-        <div class="modal" style="max-width:700px;">
-            <h3>✏️ Quiz Editor</h3>
-            <input class="input-field" type="text" id="quizTitle" placeholder="Quiz Title">
-            <div id="questionsContainer" style="max-height:350px;overflow-y:auto;">
-                <!-- Questions added dynamically -->
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                <button class="btn btn-outline btn-sm" onclick="addQuestionField()">+ Add Question</button>
-                <button class="btn btn-primary" onclick="saveQuiz()">💾 Save Quiz</button>
-                <button class="btn btn-outline btn-sm" onclick="closeModal('quizEditorModal')">Cancel</button>
-            </div>
-        </div>
+    <!-- WAITING ROOM (after icon confirmed) -->
+    <div class="screen" id="screen-waiting">
+      <div style="text-align:center; padding:80px 30px;">
+        <div style="font-size:6rem;" id="waitingAvatar">🐼</div>
+        <h2 style="font-family:var(--font-display); font-size:2.5rem; margin:20px 0;">You're in! 🎉</h2>
+        <p style="font-size:1.4rem;" id="waitingName">Player</p>
+        <p style="font-size:1.2rem; color:var(--text-secondary); margin:30px 0;">Waiting for the host to start the quiz...</p>
+        <div class="timer-bar" style="max-width:300px; margin:0 auto;"><div class="timer-fill" style="width:100%; background:#06b6d4; animation: pulseGlow 1.5s infinite;"></div></div>
+      </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settingsModal" style="display:none;">
-        <div class="modal">
-            <h3>⚙️ Settings</h3>
-            <label>Theme</label>
-            <select class="input-field" id="themeSelect" onchange="setTheme(this.value)">
-                <option value="dark">🌌 Dark Mode</option>
-                <option value="light">☀️ Light Mode</option>
-            </select>
-            <label>Default Timer (seconds)</label>
-            <input class="input-field" type="number" id="defaultTimer" value="15" min="5" max="60">
-            <label>Default Points</label>
-            <input class="input-field" type="number" id="defaultPoints" value="100" min="10" max="1000">
-            <button class="btn btn-primary" style="margin-top:10px;" onclick="saveSettings()">Save Settings</button>
-            <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="closeModal('settingsModal')">Close</button>
-        </div>
+    <!-- GAME SCREEN -->
+    <div class="screen" id="screen-game">
+      <div class="game-container" id="gameArea"></div>
     </div>
 
-    <script>
-        // ==================== GLOBAL STATE ====================
-        const APP = {
-            theme: 'dark',
-            soundEnabled: true,
-            quizzes: [],
-            selectedQuiz: null,
-            gameState: 'idle', // idle | waiting | playing | paused | ended
-            players: [],
-            currentQuestionIndex: 0,
-            currentTimer: 15,
-            timerInterval: null,
-            timerRemaining: 0,
-            joinCode: '',
-            settings: {
-                defaultTimer: 15,
-                defaultPoints: 100,
-            },
-            leaderboardHistory: [],
-        };
+    <!-- END GAME SCREEN -->
+    <div class="screen" id="screen-endgame">
+      <div style="max-width:800px; margin:0 auto; padding:30px; text-align:center;" id="endGameContent"></div>
+    </div>
 
-        // Load from localStorage
-        function loadState() {
-            try {
-                const saved = JSON.parse(localStorage.getItem('rprj_quiz_arena') || '{}');
-                APP.quizzes = saved.quizzes || [];
-                APP.settings = { ...APP.settings, ...(saved.settings || {}) };
-                APP.theme = saved.theme || 'dark';
-                APP.soundEnabled = saved.soundEnabled !== false;
-                APP.leaderboardHistory = saved.leaderboardHistory || [];
-            } catch (e) { /* ignore */ }
+    <div class="footer" style="padding:24px; border-top:1px solid var(--border); margin-top:50px; text-align:center; color:var(--text-secondary);">
+      <strong style="color:#a78bfa; font-family:var(--font-display);">RPRJ</strong> · Created by <strong>Jarus</strong> · Quiz Arena
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="joinModal" style="display:none;">
+    <div class="modal">
+      <h3 style="font-size:1.8rem;">🎮 Join Game</h3>
+      <input class="input-field" type="text" id="joinName" placeholder="Your Name" maxlength="20">
+      <input class="input-field" type="text" id="joinCode" placeholder="Join Code" maxlength="8">
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <button class="btn btn-accent" onclick="joinGame()">Join Lobby</button>
+        <button class="btn btn-outline" onclick="closeModal('joinModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="adminPasswordModal" style="display:none;">
+    <div class="modal">
+      <h3 style="font-size:1.8rem;">🔐 Admin Access</h3>
+      <input class="input-field" type="password" id="adminPassword" placeholder="Enter admin password">
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <button class="btn btn-primary" onclick="verifyAdminPassword()">Unlock</button>
+        <button class="btn btn-outline" onclick="closeModal('adminPasswordModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="quizEditorModal" style="display:none;">
+    <div class="modal" style="max-width:750px;">
+      <h3 style="font-size:1.6rem;">✏️ Quiz Editor</h3>
+      <div id="questionsContainer" style="max-height:400px; overflow-y:auto;"></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+        <button class="btn btn-outline btn-sm" onclick="addQuestionField()">+ Add Question</button>
+        <button class="btn btn-primary" onclick="saveQuizFromEditor()">💾 Save</button>
+        <button class="btn btn-outline btn-sm" onclick="closeModal('quizEditorModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settingsModal" style="display:none;">
+    <div class="modal">
+      <h3 style="font-size:1.6rem;">⚙️ Settings</h3>
+      <label style="font-size:1.1rem;">Theme</label>
+      <select class="input-field" id="themeSelect" onchange="setTheme(this.value)">
+        <option value="dark">🌌 Dark Mode</option>
+        <option value="light">☀️ Light Mode</option>
+      </select>
+      <p style="color:var(--text-secondary); margin-top:20px;">Sound & fullscreen controls are in the top bar.</p>
+      <button class="btn btn-outline btn-sm" style="margin-top:16px;" onclick="closeModal('settingsModal')">Close</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- GLOBAL STATE ----------
+      const APP = {
+        theme: 'dark',
+        soundEnabled: true,
+        quiz: {
+          title: 'Test Quiz',
+          questions: [
+            { question: '1+9=???', answers: ['19', '10', '8', '9'], correct: 1, time: 10, points: 10 }
+          ]
+        },
+        gameState: 'idle', // idle | playing | ended
+        players: [],
+        currentQuestionIndex: 0,
+        timerInterval: null,
+        timerRemaining: 0,
+        joinCode: '',
+        adminPassword: 'admin', // default password
+        selectedQuiz: null,
+        pendingPlayerName: '',
+        pendingPlayerAvatar: '',
+      };
+
+      // Preload quiz into selectedQuiz
+      APP.selectedQuiz = APP.quiz;
+      APP.joinCode = generateJoinCode();
+
+      // load settings
+      try {
+        const saved = JSON.parse(localStorage.getItem('rprj_quiz_settings') || '{}');
+        if (saved.theme) APP.theme = saved.theme;
+        if (saved.soundEnabled !== undefined) APP.soundEnabled = saved.soundEnabled;
+        if (saved.adminPassword) APP.adminPassword = saved.adminPassword;
+      } catch(e) {}
+
+      function saveSettings() {
+        localStorage.setItem('rprj_quiz_settings', JSON.stringify({
+          theme: APP.theme,
+          soundEnabled: APP.soundEnabled,
+          adminPassword: APP.adminPassword
+        }));
+      }
+
+      document.documentElement.setAttribute('data-theme', APP.theme);
+      if (!APP.soundEnabled) document.getElementById('soundBtn').textContent = '🔇';
+
+      // ---------- LOADING SCREEN ----------
+      let loadPercent = 0;
+      const loadInterval = setInterval(() => {
+        loadPercent += Math.floor(Math.random() * 7) + 4;
+        if (loadPercent >= 100) {
+          loadPercent = 100;
+          clearInterval(loadInterval);
+          setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('app').classList.add('visible');
+            initParticles();
+          }, 500);
         }
+        document.getElementById('loadPercent').textContent = loadPercent + '%';
+        document.getElementById('loadBar').style.width = loadPercent + '%';
+      }, 200);
 
-        function saveState() {
-            localStorage.setItem('rprj_quiz_arena', JSON.stringify({
-                quizzes: APP.quizzes,
-                settings: APP.settings,
-                theme: APP.theme,
-                soundEnabled: APP.soundEnabled,
-                leaderboardHistory: APP.leaderboardHistory,
-            }));
+      // ---------- PARTICLES ----------
+      const pCanvas = document.getElementById('particlesCanvas');
+      const pCtx = pCanvas.getContext('2d');
+      let pArray = [];
+      function resizePCanvas() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; }
+      window.addEventListener('resize', resizePCanvas); resizePCanvas();
+      class Particle {
+        constructor() { this.reset(); }
+        reset() { this.x=Math.random()*pCanvas.width; this.y=Math.random()*pCanvas.height; this.size=Math.random()*2.8+1; this.sx=(Math.random()-0.5)*0.9; this.sy=(Math.random()-0.5)*0.9; this.alpha=Math.random()*0.6+0.2; }
+        update() { this.x+=this.sx; this.y+=this.sy; if(this.x<-20) this.x=pCanvas.width+20; if(this.x>pCanvas.width+20) this.x=-20; if(this.y<-20) this.y=pCanvas.height+20; if(this.y>pCanvas.height+20) this.y=-20; }
+        draw() { pCtx.beginPath(); pCtx.arc(this.x,this.y,this.size,0,Math.PI*2); pCtx.fillStyle=`rgba(168,133,250,${this.alpha})`; pCtx.fill(); }
+      }
+      function initParticles() {
+        const count = Math.min(Math.floor((pCanvas.width*pCanvas.height)/5000), 150);
+        pArray = Array.from({length:count}, ()=>new Particle());
+        if (!window._pAnimating) animateParticles();
+      }
+      function animateParticles() {
+        window._pAnimating = true;
+        pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+        pArray.forEach(p=>{p.update(); p.draw();});
+        requestAnimationFrame(animateParticles);
+      }
+      initParticles();
+
+      // ---------- SCREENS ----------
+      function showScreen(name) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('screen-'+name);
+        if (target) { target.classList.add('active'); target.style.animation='none'; target.offsetHeight; target.style.animation='screenIn 0.5s ease'; }
+        if (name === 'host') refreshHostDashboard();
+      }
+
+      function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+      function openJoinModal() { document.getElementById('joinModal').style.display = 'flex'; }
+      function openSettingsModal() { document.getElementById('settingsModal').style.display = 'flex'; }
+      function openQuizEditor() {
+        document.getElementById('quizEditorModal').style.display = 'flex';
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+        APP.selectedQuiz.questions.forEach((q, idx) => addQuestionField(q, idx));
+        if (container.children.length === 0) addQuestionField();
+      }
+
+      // ---------- ADMIN ACCESS VIA LOGO CLICKS ----------
+      let logoClickCount = 0;
+      let logoClickTimer = null;
+      document.getElementById('logoClickTarget').addEventListener('click', (e) => {
+        logoClickCount++;
+        if (logoClickCount === 5) {
+          clearTimeout(logoClickTimer);
+          logoClickCount = 0;
+          document.getElementById('adminPasswordModal').style.display = 'flex';
+        } else {
+          clearTimeout(logoClickTimer);
+          logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
         }
+      });
 
-        loadState();
-        document.documentElement.setAttribute('data-theme', APP.theme);
-        if (!APP.soundEnabled) document.getElementById('soundBtn').textContent = '🔇';
-
-        // ==================== LOADING SCREEN ====================
-        let loadPercent = 0;
-        const loadInterval = setInterval(() => {
-            loadPercent += Math.floor(Math.random() * 8) + 3;
-            if (loadPercent >= 100) {
-                loadPercent = 100;
-                clearInterval(loadInterval);
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    document.getElementById('app').classList.add('visible');
-                    initParticles();
-                }, 400);
-            }
-            document.getElementById('loadPercent').textContent = loadPercent + '%';
-            document.getElementById('loadBar').style.width = loadPercent + '%';
-        }, 180);
-
-        // ==================== PARTICLES ====================
-        const pCanvas = document.getElementById('particlesCanvas');
-        const pCtx = pCanvas.getContext('2d');
-        let pArray = [];
-
-        function resizePCanvas() {
-            pCanvas.width = window.innerWidth;
-            pCanvas.height = window.innerHeight;
+      function verifyAdminPassword() {
+        const input = document.getElementById('adminPassword').value;
+        if (input === APP.adminPassword) {
+          closeModal('adminPasswordModal');
+          showScreen('host');
+          showToast('🔓 Admin panel unlocked');
+        } else {
+          alert('Wrong password!');
         }
-        window.addEventListener('resize', resizePCanvas);
-        resizePCanvas();
+      }
 
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * pCanvas.width;
-                this.y = Math.random() * pCanvas.height;
-                this.size = Math.random() * 2.5 + 1;
-                this.sx = (Math.random() - 0.5) * 0.8;
-                this.sy = (Math.random() - 0.5) * 0.8;
-                this.alpha = Math.random() * 0.5 + 0.2;
-            }
-            update() {
-                this.x += this.sx;
-                this.y += this.sy;
-                if (this.x < -20) this.x = pCanvas.width + 20;
-                if (this.x > pCanvas.width + 20) this.x = -20;
-                if (this.y < -20) this.y = pCanvas.height + 20;
-                if (this.y > pCanvas.height + 20) this.y = -20;
-            }
-            draw() {
-                pCtx.beginPath();
-                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                pCtx.fillStyle = `rgba(168,133,250,${this.alpha})`;
-                pCtx.fill();
-            }
-        }
-
-        function initParticles() {
-            const count = Math.min(Math.floor((pCanvas.width * pCanvas.height) / 7000), 120);
-            pArray = Array.from({ length: count }, () => new Particle());
-            if (!pAnimating) animateParticles();
-        }
-        let pAnimating = false;
-
-        function animateParticles() {
-            pAnimating = true;
-            pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
-            pArray.forEach(p => { p.update();
-                p.draw(); });
-            // Draw connections
-            for (let i = 0; i < pArray.length; i++) {
-                for (let j = i + 1; j < pArray.length; j++) {
-                    const dx = pArray[i].x - pArray[j].x;
-                    const dy = pArray[i].y - pArray[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 120) {
-                        pCtx.beginPath();
-                        pCtx.moveTo(pArray[i].x, pArray[i].y);
-                        pCtx.lineTo(pArray[j].x, pArray[j].y);
-                        pCtx.strokeStyle = `rgba(168,133,250,${(1-dist/120)*0.18})`;
-                        pCtx.lineWidth = 0.5;
-                        pCtx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animateParticles);
-        }
-        initParticles();
-
-        // ==================== SCREEN NAVIGATION ====================
-        function showScreen(name) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById('screen-' + name);
-            if (target) {
-                target.classList.add('active');
-                target.style.animation = 'none';
-                target.offsetHeight;
-                target.style.animation = 'screenIn 0.5s ease';
-            }
-            if (name === 'host') refreshHostDashboard();
-            if (name === 'leaderboard') refreshLeaderboardScreen();
-        }
-
-        // ==================== MODALS ====================
-        function showJoinModal() { document.getElementById('joinModal').style.display = 'flex'; }
-
-        function showQuizEditor(quizIndex = null) {
-            document.getElementById('quizEditorModal').style.display = 'flex';
-            document.getElementById('quizTitle').value = '';
-            document.getElementById('questionsContainer').innerHTML = '';
-            if (quizIndex !== null && APP.quizzes[quizIndex]) {
-                const q = APP.quizzes[quizIndex];
-                document.getElementById('quizTitle').value = q.title;
-                q.questions.forEach(qu => addQuestionField(qu));
-            }
-            if (document.getElementById('questionsContainer').children.length === 0) {
-                addQuestionField();
-                addQuestionField();
-            }
-        }
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        function showSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
-
-        // Close modals on overlay click
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none';
-        });
-
-        // ==================== QUIZ EDITOR ====================
-        function addQuestionField(prefill = null) {
-            const container = document.getElementById('questionsContainer');
-            const idx = container.children.length;
-            const div = document.createElement('div');
-            div.style.cssText =
-                'border:1px solid var(--border);border-radius:10px;padding:14px;margin:8px 0;background:var(--surface);';
-            div.innerHTML = `
-            <strong>Q${idx+1}</strong>
-            <input class="input-field" type="text" placeholder="Question" value="${prefill?.question||''}">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
-              <input class="input-field" type="text" placeholder="Answer A" value="${prefill?.answers?.[0]||''}">
-              <input class="input-field" type="text" placeholder="Answer B" value="${prefill?.answers?.[1]||''}">
-              <input class="input-field" type="text" placeholder="Answer C" value="${prefill?.answers?.[2]||''}">
-              <input class="input-field" type="text" placeholder="Answer D" value="${prefill?.answers?.[3]||''}">
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <label>Correct:</label>
-              <select class="input-field" style="width:auto;">
-                <option value="0" ${prefill?.correct===0?'selected':''}>A</option>
-                <option value="1" ${prefill?.correct===1?'selected':''}>B</option>
-                <option value="2" ${prefill?.correct===2?'selected':''}>C</option>
-                <option value="3" ${prefill?.correct===3?'selected':''}>D</option>
-              </select>
-              <label>Time(s):</label>
-              <input class="input-field" type="number" value="${prefill?.time||APP.settings.defaultTimer}" style="width:70px;" min="5">
-              <label>Points:</label>
-              <input class="input-field" type="number" value="${prefill?.points||APP.settings.defaultPoints}" style="width:80px;" min="10">
-              <button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
-            </div>
-          `;
-            container.appendChild(div);
-        }
-
-        function saveQuiz() {
-            const title = document.getElementById('quizTitle').value.trim() || 'Untitled Quiz';
-            const questionDivs = document.getElementById('questionsContainer').children;
-            const questions = [];
-            for (const div of questionDivs) {
-                const inputs = div.querySelectorAll('input[type="text"]');
-                const selects = div.querySelectorAll('select');
-                const numInputs = div.querySelectorAll('input[type="number"]');
-                if (inputs[0].value.trim()) {
-                    questions.push({
-                        question: inputs[0].value.trim(),
-                        answers: [
-                            inputs[1]?.value?.trim() || 'A',
-                            inputs[2]?.value?.trim() || 'B',
-                            inputs[3]?.value?.trim() || 'C',
-                            inputs[4]?.value?.trim() || 'D'
-                        ],
-                        correct: parseInt(selects[0]?.value || 0),
-                        time: parseInt(numInputs[0]?.value || APP.settings.defaultTimer),
-                        points: parseInt(numInputs[1]?.value || APP.settings.defaultPoints),
-                    });
-                }
-            }
-            if (questions.length === 0) {
-                alert('Please add at least one question.');
-                return;
-            }
-            APP.quizzes.push({ title, questions });
-            saveState();
-            closeModal('quizEditorModal');
-            refreshHostDashboard();
-            showToast('✅ Quiz saved!');
-        }
-
-        // ==================== HOST DASHBOARD ====================
-        function refreshHostDashboard() {
-            const list = document.getElementById('quizList');
-            if (APP.quizzes.length === 0) {
-                list.innerHTML = '<p style="color:var(--text-secondary);">No quizzes yet. Create one!</p>';
-            } else {
-                list.innerHTML = APP.quizzes.map((q, i) => `
-              <div class="quiz-list-item">
-                <div>
-                  <strong>${q.title}</strong>
-                  <span class="badge badge-purple">${q.questions.length} Qs</span>
-                </div>
-                <div style="display:flex;gap:6px;">
-                  <button class="btn btn-outline btn-sm" onclick="selectQuiz(${i})">Select</button>
-                  <button class="btn btn-outline btn-sm" onclick="showQuizEditor(${i})">Edit</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteQuiz(${i})">✕</button>
-                </div>
-              </div>
-            `).join('');
-            }
-            document.getElementById('playerCount').textContent = APP.players.length;
-            const plist = document.getElementById('playerList');
-            if (APP.players.length === 0) {
-                plist.innerHTML = '<p style="color:var(--text-secondary);">Waiting for players...</p>';
-            } else {
-                plist.innerHTML = APP.players.map((p, i) => `
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border);">
-                <span>${p.avatar||'👤'} ${p.name}</span>
-                <span style="color:#22c55e;">${p.score||0} pts</span>
-                <button class="btn btn-danger btn-sm" onclick="kickPlayer(${i})">Kick</button>
-              </div>
-            `).join('');
-            }
-            document.getElementById('joinCodeDisplay').textContent = APP.joinCode || '----';
-        }
-
-        function selectQuiz(index) {
-            APP.selectedQuiz = APP.quizzes[index];
-            APP.joinCode = generateJoinCode();
-            document.getElementById('joinCodeDisplay').textContent = APP.joinCode;
-            document.getElementById('hostStatus').textContent = `Selected: ${APP.selectedQuiz.title} | Join Code: ${APP.joinCode}`;
-            document.getElementById('btnStartGame').disabled = false;
-            showToast('📋 Quiz selected! Share join code: ' + APP.joinCode);
-        }
-
-        function deleteQuiz(index) {
-            if (confirm('Delete this quiz?')) {
-                APP.quizzes.splice(index, 1);
-                saveState();
-                refreshHostDashboard();
-                showToast('🗑 Quiz deleted.');
-            }
-        }
-
-        function generateJoinCode() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-
-        function kickPlayer(index) {
-            APP.players.splice(index, 1);
-            refreshHostDashboard();
-            showToast('👢 Player kicked.');
-        }
-
-        function hostResetLeaderboard() {
-            APP.players.forEach(p => { p.score = 0;
-                p.correct = 0;
-                p.wrong = 0; });
-            refreshHostDashboard();
-            showToast('🔄 Leaderboard reset.');
-        }
-
-        function hostRandomizeQuestions() {
-            if (APP.selectedQuiz) {
-                APP.selectedQuiz.questions.sort(() => Math.random() - 0.5);
-                showToast('🎲 Questions randomized!');
-            }
-        }
-
-        // ==================== GAME CONTROLS (HOST) ====================
-        function hostStartGame() {
-            if (!APP.selectedQuiz) return alert('Select a quiz first.');
-            if (APP.players.length === 0) {
-                // Auto-add demo players for testing
-                APP.players.push({ name: 'Player 1', avatar: '🦊', score: 0, correct: 0, wrong: 0, id: 'p1' });
-                APP.players.push({ name: 'Player 2', avatar: '🐸', score: 0, correct: 0, wrong: 0, id: 'p2' });
-            }
-            APP.gameState = 'playing';
-            APP.currentQuestionIndex = 0;
-            document.getElementById('btnStartGame').disabled = true;
-            document.getElementById('btnPauseGame').disabled = false;
-            document.getElementById('btnEndGame').disabled = false;
-            document.getElementById('btnResumeGame').disabled = true;
-            showScreen('game');
-            showCurrentQuestion();
-            refreshHostDashboard();
-        }
-
-        function hostPauseGame() {
-            APP.gameState = 'paused';
-            clearInterval(APP.timerInterval);
-            document.getElementById('btnPauseGame').disabled = true;
-            document.getElementById('btnResumeGame').disabled = false;
-            showToast('⏸ Game paused.');
-        }
-
-        function hostResumeGame() {
-            APP.gameState = 'playing';
-            document.getElementById('btnPauseGame').disabled = false;
-            document.getElementById('btnResumeGame').disabled = true;
-            startTimer();
-            showToast('▶ Game resumed.');
-        }
-
-        function hostEndGame() {
-            APP.gameState = 'ended';
-            clearInterval(APP.timerInterval);
-            document.getElementById('btnStartGame').disabled = false;
-            document.getElementById('btnPauseGame').disabled = true;
-            document.getElementById('btnResumeGame').disabled = true;
-            document.getElementById('btnEndGame').disabled = true;
-            showEndGameScreen();
-        }
-
-        // ==================== GAMEPLAY ====================
-        function showCurrentQuestion() {
-            if (!APP.selectedQuiz || APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) {
-                hostEndGame();
-                return;
-            }
-            const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
-            APP.currentTimer = q.time || APP.settings.defaultTimer;
-            APP.timerRemaining = APP.currentTimer;
-            const gameArea = document.getElementById('gameArea');
-            gameArea.innerHTML = `
-            <div style="text-align:center;margin-bottom:10px;">
-              <span style="color:var(--text-secondary);">Question ${APP.currentQuestionIndex+1} / ${APP.selectedQuiz.questions.length}</span>
-              <span style="margin-left:16px;color:#f59e0b;">⏱ ${APP.timerRemaining}s</span>
-            </div>
-            <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%;"></div></div>
-            <div class="question-card" id="questionCard">
-              <h3 style="font-size:1.3rem;margin-bottom:16px;">${q.question}</h3>
-              ${q.answers.map((a,i) => `
-                <button class="answer-btn" onclick="selectAnswer(${i})" id="ansBtn${i}">${String.fromCharCode(65+i)}) ${a}</button>
-              `).join('')}
-            </div>
-            <button class="btn btn-outline btn-sm" onclick="showScreen('leaderboard')">📊 View Leaderboard</button>
-          `;
-            startTimer();
-        }
-
-        function startTimer() {
-            clearInterval(APP.timerInterval);
-            APP.timerInterval = setInterval(() => {
-                APP.timerRemaining--;
-                const pct = (APP.timerRemaining / APP.currentTimer) * 100;
-                const fill = document.getElementById('timerFill');
-                if (fill) {
-                    fill.style.width = pct + '%';
-                    fill.classList.remove('warning', 'danger');
-                    if (pct < 30) fill.classList.add('danger');
-                    else if (pct < 60) fill.classList.add('warning');
-                }
-                const timeSpan = document.querySelector('#gameArea span:nth-child(2)');
-                if (timeSpan) timeSpan.textContent = '⏱ ' + APP.timerRemaining + 's';
-                if (APP.timerRemaining <= 0) {
-                    clearInterval(APP.timerInterval);
-                    timeUp();
-                }
-            }, 1000);
-        }
-
-        function selectAnswer(index) {
-            if (APP.gameState !== 'playing') return;
-            clearInterval(APP.timerInterval);
-            const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
-            const correct = q.correct;
-            const card = document.getElementById('questionCard');
-            // Disable all buttons
-            document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
-            // Highlight
-            document.getElementById('ansBtn' + correct).classList.add('selected-correct');
-            if (index === correct) {
-                card.classList.add('correct-flash');
-                spawnConfetti();
-                playSound('correct');
-                spawnScorePop('+'+q.points, '#22c55e');
-                // Award points to all players (simulated)
-                APP.players.forEach(p => { p.score += q.points;
-                    p.correct = (p.correct || 0) + 1; });
-            } else {
-                document.getElementById('ansBtn' + index).classList.add('selected-wrong');
-                card.classList.add('wrong-flash');
-                playSound('wrong');
-                APP.players.forEach(p => { p.wrong = (p.wrong || 0) + 1; });
-            }
-            // Next question after delay
-            setTimeout(() => {
-                APP.currentQuestionIndex++;
-                if (APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) {
-                    hostEndGame();
-                } else {
-                    showTransitionThenNext();
-                }
-            }, 1800);
-        }
-
-        function timeUp() {
-            const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
-            document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
-            document.getElementById('ansBtn' + q.correct).classList.add('selected-correct');
-            document.getElementById('questionCard').classList.add('wrong-flash');
-            playSound('wrong');
-            setTimeout(() => {
-                APP.currentQuestionIndex++;
-                if (APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) {
-                    hostEndGame();
-                } else {
-                    showTransitionThenNext();
-                }
-            }, 1500);
-        }
-
-        function showTransitionThenNext() {
-            const gameArea = document.getElementById('gameArea');
-            gameArea.innerHTML = `
-            <div style="text-align:center;padding:60px 20px;">
-              <h2 style="font-family:var(--font-display);font-size:2.5rem;animation:pulseGlow 0.8s infinite;">Next Question</h2>
-              <div id="countdownNum" style="font-size:5rem;font-weight:900;color:#7c3aed;">3</div>
-            </div>
-          `;
-            let cd = 3;
-            const cdInterval = setInterval(() => {
-                cd--;
-                document.getElementById('countdownNum').textContent = cd > 0 ? cd : 'GO!';
-                if (cd <= 0) {
-                    clearInterval(cdInterval);
-                    showCurrentQuestion();
-                }
-            }, 700);
-        }
-
-        // ==================== END GAME ====================
-        function showEndGameScreen() {
-            showScreen('endgame');
-            const sorted = [...APP.players].sort((a, b) => (b.score || 0) - (a.score || 0));
-            // Save to leaderboard history
-            APP.leaderboardHistory.push({
-                date: new Date().toISOString(),
-                quiz: APP.selectedQuiz?.title || 'Quiz',
-                players: sorted.map(p => ({ name: p.name, avatar: p.avatar, score: p.score, correct: p.correct,
-                    wrong: p.wrong })),
-            });
-            saveState();
-            const content = document.getElementById('endGameContent');
-            const top3 = sorted.slice(0, 3);
-            content.innerHTML = `
-            <h1 style="font-family:var(--font-display);font-size:2.5rem;">🏆 Champion!</h1>
-            <div class="podium">
-              ${top3[1]?`<div class="podium-spot podium-2"><div style="font-size:3rem;">${top3[1].avatar||'🥈'}</div><strong>${top3[1].name}</strong><br>${top3[1].score||0} pts</div>`:''}
-              ${top3[0]?`<div class="podium-spot podium-1"><div style="font-size:4rem;">${top3[0].avatar||'🥇'}</div><strong>${top3[0].name}</strong><br>${top3[0].score||0} pts</div>`:''}
-              ${top3[2]?`<div class="podium-spot podium-3"><div style="font-size:2.5rem;">${top3[2].avatar||'🥉'}</div><strong>${top3[2].name}</strong><br>${top3[2].score||0} pts</div>`:''}
-            </div>
-            <h3>Final Rankings</h3>
-            <table class="leaderboard-table" style="margin:0 auto;">
-              <tr><th>Rank</th><th>Player</th><th>Score</th><th>Correct</th><th>Wrong</th></tr>
-              ${sorted.map((p,i)=>`
-                <tr>
-                  <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-                  <td>${p.avatar||'👤'} ${p.name}</td>
-                  <td>${p.score||0}</td>
-                  <td>${p.correct||0}</td>
-                  <td>${p.wrong||0}</td>
-                </tr>
-              `).join('')}
-            </table>
-            <p style="margin-top:10px;">Total Questions: ${APP.selectedQuiz?.questions.length||0}</p>
-            <button class="btn btn-primary" style="margin-top:16px;" onclick="showScreen('home');hostEndGame();">🏠 Back to Home</button>
-            <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="exportCSV()">📥 Export CSV</button>
-          `;
-            spawnConfetti(80);
-            playSound('victory');
-        }
-
-        function exportCSV() {
-            const sorted = [...APP.players].sort((a, b) => (b.score || 0) - (a.score || 0));
-            let csv = 'Rank,Name,Score,Correct,Wrong\n';
-            sorted.forEach((p, i) => {
-                csv += `${i+1},${p.name},${p.score||0},${p.correct||0},${p.wrong||0}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'quiz_results.csv';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('📥 Results exported!');
-        }
-
-        // ==================== JOIN GAME ====================
-        function joinGame() {
-            const name = document.getElementById('joinName').value.trim();
-            const code = document.getElementById('joinCode').value.trim();
-            if (!name) return alert('Enter your name.');
-            if (code !== APP.joinCode) return alert('Invalid join code.');
-            const avatar = ['🦊', '🐸', '🐱', '🐶', '🦄', '🐲', '🦋', '🐼'][Math.floor(Math.random() * 8)];
-            APP.players.push({ name, avatar, score: 0, correct: 0, wrong: 0, id: 'p' + Date.now() });
-            closeModal('joinModal');
-            refreshHostDashboard();
-            showToast('✅ Joined! Wait for host to start.');
-        }
-
-        // ==================== LEADERBOARD SCREEN ====================
-        function refreshLeaderboardScreen() {
-            const content = document.getElementById('leaderboardContent');
-            if (APP.leaderboardHistory.length === 0) {
-                content.innerHTML =
-                    '<p style="text-align:center;color:var(--text-secondary);">No data yet. Play a game to see results!</p>';
-                return;
-            }
-            const latest = APP.leaderboardHistory[APP.leaderboardHistory.length - 1];
-            const sorted = (latest.players || []).sort((a, b) => (b.score || 0) - (a.score || 0));
-            content.innerHTML = `
-            <h4 style="text-align:center;">📊 ${latest.quiz} — ${new Date(latest.date).toLocaleDateString()}</h4>
-            <table class="leaderboard-table">
-              <tr><th>Rank</th><th>Player</th><th>Score</th></tr>
-              ${sorted.map((p,i)=>`
-                <tr>
-                  <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
-                  <td>${p.avatar||'👤'} ${p.name}</td>
-                  <td>${p.score||0}</td>
-                </tr>
-              `).join('')}
-            </table>
-          `;
-        }
-
-        // ==================== EFFECTS ====================
-        function spawnConfetti(count = 40) {
-            const colors = ['#7c3aed', '#06b6d4', '#f59e0b', '#22c55e', '#ef4444', '#a78bfa', '#ff6b6b', '#ffd93d'];
-            for (let i = 0; i < count; i++) {
-                const el = document.createElement('div');
-                el.className = 'confetti-piece';
-                el.style.cssText = `
-              left:${Math.random()*100}vw;
-              top:-${Math.random()*40+10}px;
-              width:${Math.random()*10+6}px;
-              height:${Math.random()*14+8}px;
-              background:${colors[Math.floor(Math.random()*colors.length)]};
-              border-radius:${Math.random()>0.5?'50%':'2px'};
-              animation-duration:${Math.random()*2+2}s;
-              animation-delay:${Math.random()*0.8}s;
-            `;
-                document.body.appendChild(el);
-                setTimeout(() => el.remove(), 3000);
-            }
-        }
-
-        function spawnScorePop(text, color) {
-            const el = document.createElement('div');
-            el.className = 'score-pop';
-            el.textContent = text;
-            el.style.cssText = `left:50%;top:40%;color:${color};transform:translateX(-50%);`;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1300);
-        }
-
-        function showToast(msg) {
-            const el = document.createElement('div');
-            el.textContent = msg;
-            el.style.cssText = `
-            position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:500;
-            background:rgba(20,20,40,0.95);color:#fff;padding:10px 22px;border-radius:25px;
-            font-size:0.9rem;font-weight:600;border:1px solid rgba(168,133,250,0.5);
-            box-shadow:0 0 20px rgba(124,58,237,0.4);animation:toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
-          `;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 2500);
-        }
-        // Toast animations
-        const toastStyle = document.createElement('style');
-        toastStyle.textContent = `
-          @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-          @keyframes toastOut{from{opacity:1;transform:translateX(-50%) translateY(0);}to{opacity:0;transform:translateX(-50%) translateY(-20px);}}
-        `;
-        document.head.appendChild(toastStyle);
-
-        // ==================== SOUNDS (Web Audio API) ====================
-        const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(type) {
-            if (!APP.soundEnabled) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.value = 0.15;
-            switch (type) {
-                case 'correct':
-                    osc.frequency.setValueAtTime(523, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
-                    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.4);
-                    break;
-                case 'wrong':
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.2);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
-                    break;
-                case 'victory':
-                    osc.frequency.setValueAtTime(523, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
-                    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.3);
-                    osc.frequency.setValueAtTime(1047, audioCtx.currentTime + 0.45);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.7);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.7);
-                    break;
-            }
-        }
-
-        function toggleSound() {
-            APP.soundEnabled = !APP.soundEnabled;
-            document.getElementById('soundBtn').textContent = APP.soundEnabled ? '🔊' : '🔇';
-            saveState();
-        }
-
-        // ==================== THEME ====================
-        function toggleTheme() {
-            APP.theme = APP.theme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', APP.theme);
-            document.getElementById('themeSelect').value = APP.theme;
-            saveState();
-        }
-
-        function setTheme(t) {
-            APP.theme = t;
-            document.documentElement.setAttribute('data-theme', t);
-            saveState();
-        }
-        document.getElementById('themeSelect').value = APP.theme;
-
-        // ==================== FULLSCREEN ====================
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        // ==================== SETTINGS ====================
-        function saveSettings() {
-            APP.settings.defaultTimer = parseInt(document.getElementById('defaultTimer').value) || 15;
-            APP.settings.defaultPoints = parseInt(document.getElementById('defaultPoints').value) || 100;
-            saveState();
-            closeModal('settingsModal');
-            showToast('⚙️ Settings saved!');
-        }
-        document.getElementById('defaultTimer').value = APP.settings.defaultTimer;
-        document.getElementById('defaultPoints').value = APP.settings.defaultPoints;
-
-        // ==================== KEYBOARD SHORTCUTS ====================
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'f' && e.ctrlKey) { e.preventDefault();
-                toggleFullscreen(); }
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-            }
-        });
-
-        // ==================== INIT ====================
+      function leaveAdmin() {
         showScreen('home');
+        showToast('🔒 Admin panel locked');
+      }
+
+      // ---------- HOST DASHBOARD ----------
+      function refreshHostDashboard() {
+        document.getElementById('quizList').innerHTML = APP.selectedQuiz.questions.map((q,i) => `
+          <div class="quiz-list-item">
+            <span><strong>Q${i+1}:</strong> ${q.question} (${q.time}s, ${q.points}pts)</span>
+            <span class="badge badge-purple">Correct: ${String.fromCharCode(65+q.correct)}</span>
+          </div>
+        `).join('');
+        document.getElementById('playerCount').textContent = APP.players.length;
+        const plist = document.getElementById('playerList');
+        if (APP.players.length === 0) {
+          plist.innerHTML = '<p style="color:var(--text-secondary);">Waiting for players...</p>';
+        } else {
+          plist.innerHTML = APP.players.map((p,i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border);">
+              <span style="font-size:1.2rem;">${p.avatar} ${p.name}</span>
+              <span style="color:#22c55e;">${p.score||0} pts</span>
+              <button class="btn btn-danger btn-sm" onclick="kickPlayer(${i})">✕</button>
+            </div>
+          `).join('');
+        }
+        document.getElementById('joinCodeDisplay').textContent = APP.joinCode;
+        document.getElementById('btnStartGame').disabled = (APP.players.length === 0);
+        document.getElementById('hostStatus').textContent = APP.players.length ? `Ready with ${APP.players.length} player(s)` : 'No active game';
+      }
+
+      function kickPlayer(index) {
+        APP.players.splice(index, 1);
         refreshHostDashboard();
-    </script>
+        showToast('Player removed');
+      }
+
+      function hostResetLeaderboard() {
+        APP.players.forEach(p => { p.score = 0; p.correct = 0; p.wrong = 0; });
+        refreshHostDashboard();
+        showToast('Scores reset');
+      }
+
+      function generateJoinCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+
+      // ---------- JOIN FLOW (player) ----------
+      function joinGame() {
+        const name = document.getElementById('joinName').value.trim();
+        const code = document.getElementById('joinCode').value.trim().toUpperCase();
+        if (!name) return alert('Please enter your name.');
+        if (code !== APP.joinCode) return alert('Invalid join code.');
+        if (APP.players.find(p => p.name === name)) return alert('Name already taken.');
+        APP.pendingPlayerName = name;
+        closeModal('joinModal');
+        showAvatarSelection();
+      }
+
+      const ANIMALS = ['🦊','🐸','🐱','🐶','🦄','🐲','🦋','🐼','🐨','🐯','🦁','🐮','🐷','🐭','🐰'];
+      function showAvatarSelection() {
+        showScreen('lobby');
+        const grid = document.getElementById('avatarGrid');
+        const takenAvatars = APP.players.map(p => p.avatar);
+        grid.innerHTML = ANIMALS.map(animal => {
+          const taken = takenAvatars.includes(animal);
+          return `<div class="avatar-option ${taken?'taken':''}" data-avatar="${animal}" onclick="selectAvatar(this, '${animal}')">${animal}</div>`;
+        }).join('');
+        document.getElementById('confirmAvatarBtn').disabled = true;
+        document.getElementById('lobbyNameDisplay').textContent = `Playing as: ${APP.pendingPlayerName}`;
+        APP.pendingPlayerAvatar = '';
+      }
+
+      window.selectAvatar = function(el, animal) {
+        if (el.classList.contains('taken')) return;
+        document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
+        APP.pendingPlayerAvatar = animal;
+        document.getElementById('confirmAvatarBtn').disabled = false;
+      };
+
+      function confirmAvatarSelection() {
+        if (!APP.pendingPlayerAvatar) return;
+        APP.players.push({
+          name: APP.pendingPlayerName,
+          avatar: APP.pendingPlayerAvatar,
+          score: 0,
+          correct: 0,
+          wrong: 0,
+          id: 'p'+Date.now()
+        });
+        showScreen('waiting');
+        document.getElementById('waitingAvatar').textContent = APP.pendingPlayerAvatar;
+        document.getElementById('waitingName').textContent = APP.pendingPlayerName;
+        refreshHostDashboard();
+        showToast('✅ Joined! Waiting for host.');
+        // Reset pending
+        APP.pendingPlayerName = '';
+        APP.pendingPlayerAvatar = '';
+      }
+
+      // ---------- HOST GAME START ----------
+      function hostStartGame() {
+        if (APP.players.length === 0) return alert('No players in lobby.');
+        APP.gameState = 'playing';
+        APP.currentQuestionIndex = 0;
+        showScreen('game');
+        showCurrentQuestion();
+        refreshHostDashboard();
+      }
+
+      function hostEndGame() {
+        APP.gameState = 'ended';
+        clearInterval(APP.timerInterval);
+        showEndGameScreen();
+      }
+
+      // ---------- GAMEPLAY ----------
+      function showCurrentQuestion() {
+        if (!APP.selectedQuiz || APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) {
+          hostEndGame();
+          return;
+        }
+        const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
+        APP.timerRemaining = q.time;
+        const gameArea = document.getElementById('gameArea');
+        gameArea.innerHTML = `
+          <div style="text-align:center; margin-bottom:16px; font-size:1.1rem;">
+            <span>Question ${APP.currentQuestionIndex+1}/${APP.selectedQuiz.questions.length}</span>
+            <span style="margin-left:20px; color:#f59e0b;">⏱ ${APP.timerRemaining}s</span>
+          </div>
+          <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%;"></div></div>
+          <div class="question-card" id="questionCard">
+            <h2 style="font-size:2rem; margin-bottom:24px;">${q.question}</h2>
+            ${q.answers.map((a,i) => `
+              <button class="answer-btn" onclick="selectAnswer(${i})" id="ansBtn${i}">${String.fromCharCode(65+i)}) ${a}</button>
+            `).join('')}
+          </div>
+        `;
+        startTimer();
+      }
+
+      function startTimer() {
+        clearInterval(APP.timerInterval);
+        APP.timerInterval = setInterval(() => {
+          APP.timerRemaining--;
+          const pct = (APP.timerRemaining / APP.selectedQuiz.questions[APP.currentQuestionIndex].time) * 100;
+          const fill = document.getElementById('timerFill');
+          if (fill) {
+            fill.style.width = pct + '%';
+            fill.classList.remove('warning','danger');
+            if (pct < 30) fill.classList.add('danger');
+            else if (pct < 60) fill.classList.add('warning');
+          }
+          if (APP.timerRemaining <= 0) { clearInterval(APP.timerInterval); timeUp(); }
+        }, 1000);
+      }
+
+      function selectAnswer(index) {
+        if (APP.gameState !== 'playing') return;
+        clearInterval(APP.timerInterval);
+        const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
+        const correct = q.correct;
+        document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+        document.getElementById('ansBtn'+correct).classList.add('selected-correct');
+        if (index === correct) {
+          document.getElementById('questionCard').classList.add('correct-flash');
+          APP.players.forEach(p => { p.score += q.points; p.correct = (p.correct||0)+1; });
+          spawnConfetti(30);
+          playSound('correct');
+        } else {
+          document.getElementById('ansBtn'+index).classList.add('selected-wrong');
+          document.getElementById('questionCard').classList.add('wrong-flash');
+          APP.players.forEach(p => p.wrong = (p.wrong||0)+1);
+          playSound('wrong');
+        }
+        setTimeout(() => {
+          APP.currentQuestionIndex++;
+          if (APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) hostEndGame();
+          else showCurrentQuestion();
+        }, 2000);
+      }
+
+      function timeUp() {
+        const q = APP.selectedQuiz.questions[APP.currentQuestionIndex];
+        document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+        document.getElementById('ansBtn'+q.correct).classList.add('selected-correct');
+        document.getElementById('questionCard').classList.add('wrong-flash');
+        APP.players.forEach(p => p.wrong = (p.wrong||0)+1);
+        playSound('wrong');
+        setTimeout(() => {
+          APP.currentQuestionIndex++;
+          if (APP.currentQuestionIndex >= APP.selectedQuiz.questions.length) hostEndGame();
+          else showCurrentQuestion();
+        }, 2000);
+      }
+
+      // ---------- END GAME ----------
+      function showEndGameScreen() {
+        showScreen('endgame');
+        const sorted = [...APP.players].sort((a,b) => (b.score||0)-(a.score||0));
+        const top3 = sorted.slice(0,3);
+        const content = document.getElementById('endGameContent');
+        content.innerHTML = `
+          <h1 style="font-family:var(--font-display); font-size:3rem;">🏆 Champions!</h1>
+          <div class="podium">
+            ${top3[1]?`<div class="podium-spot podium-2"><div style="font-size:4rem;">${top3[1].avatar}</div><strong>${top3[1].name}</strong><br>${top3[1].score||0} pts</div>`:''}
+            ${top3[0]?`<div class="podium-spot podium-1"><div style="font-size:5rem;">${top3[0].avatar}</div><strong>${top3[0].name}</strong><br>${top3[0].score||0} pts</div>`:''}
+            ${top3[2]?`<div class="podium-spot podium-3"><div style="font-size:3.5rem;">${top3[2].avatar}</div><strong>${top3[2].name}</strong><br>${top3[2].score||0} pts</div>`:''}
+          </div>
+          <table class="leaderboard-table" style="margin:0 auto;">
+            <tr><th>Rank</th><th>Player</th><th>Score</th><th>✅</th><th>❌</th></tr>
+            ${sorted.map((p,i)=>`
+              <tr>
+                <td class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i+1}</td>
+                <td>${p.avatar} ${p.name}</td>
+                <td>${p.score||0}</td>
+                <td>${p.correct||0}</td>
+                <td>${p.wrong||0}</td>
+              </tr>
+            `).join('')}
+          </table>
+          <button class="btn btn-primary" style="margin-top:30px;" onclick="showScreen('home');">🏠 Back to Home</button>
+        `;
+        spawnConfetti(80);
+        playSound('victory');
+      }
+
+      // ---------- QUIZ EDITOR ----------
+      function addQuestionField(prefill=null, idx=null) {
+        const container = document.getElementById('questionsContainer');
+        const div = document.createElement('div');
+        div.style.cssText = 'border:1px solid var(--border); border-radius:14px; padding:20px; margin:12px 0; background:var(--surface);';
+        div.innerHTML = `
+          <strong>Q${container.children.length+1}</strong>
+          <input class="input-field" type="text" placeholder="Question" value="${prefill?.question||''}">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
+            <input class="input-field" type="text" placeholder="A" value="${prefill?.answers?.[0]||''}">
+            <input class="input-field" type="text" placeholder="B" value="${prefill?.answers?.[1]||''}">
+            <input class="input-field" type="text" placeholder="C" value="${prefill?.answers?.[2]||''}">
+            <input class="input-field" type="text" placeholder="D" value="${prefill?.answers?.[3]||''}">
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <label>Correct:</label>
+            <select class="input-field" style="width:auto;">
+              <option value="0" ${prefill?.correct===0?'selected':''}>A</option>
+              <option value="1" ${prefill?.correct===1?'selected':''}>B</option>
+              <option value="2" ${prefill?.correct===2?'selected':''}>C</option>
+              <option value="3" ${prefill?.correct===3?'selected':''}>D</option>
+            </select>
+            <label>Time(s):</label>
+            <input class="input-field" type="number" value="${prefill?.time||10}" style="width:80px;" min="5">
+            <label>Points:</label>
+            <input class="input-field" type="number" value="${prefill?.points||10}" style="width:90px;" min="5">
+            <button class="btn btn-danger btn-sm" onclick="this.closest('div').remove()">✕</button>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+
+      function saveQuizFromEditor() {
+        const questionDivs = document.getElementById('questionsContainer').children;
+        const questions = [];
+        for (const div of questionDivs) {
+          const inputs = div.querySelectorAll('input[type="text"]');
+          const selects = div.querySelectorAll('select');
+          const numInputs = div.querySelectorAll('input[type="number"]');
+          if (inputs[0].value.trim()) {
+            questions.push({
+              question: inputs[0].value.trim(),
+              answers: [inputs[1]?.value||'A', inputs[2]?.value||'B', inputs[3]?.value||'C', inputs[4]?.value||'D'],
+              correct: parseInt(selects[0]?.value||0),
+              time: parseInt(numInputs[0]?.value||10),
+              points: parseInt(numInputs[1]?.value||10)
+            });
+          }
+        }
+        if (questions.length === 0) return alert('Add at least one question.');
+        APP.selectedQuiz = { title: 'Custom Quiz', questions };
+        APP.joinCode = generateJoinCode();
+        closeModal('quizEditorModal');
+        refreshHostDashboard();
+        showToast('✅ Questions updated!');
+      }
+
+      // ---------- EFFECTS ----------
+      function spawnConfetti(count=40) {
+        const colors = ['#7c3aed','#06b6d4','#f59e0b','#22c55e','#ef4444','#a78bfa'];
+        for (let i=0; i<count; i++) {
+          const el = document.createElement('div');
+          el.className='confetti-piece';
+          el.style.cssText = `left:${Math.random()*100}vw; top:-${Math.random()*50+20}px; width:${Math.random()*12+8}px; height:${Math.random()*16+10}px; background:${colors[Math.floor(Math.random()*colors.length)]}; border-radius:${Math.random()>0.5?'50%':'3px'}; animation:confettiFall ${Math.random()*2+2}s ease-out forwards;`;
+          document.body.appendChild(el);
+          setTimeout(()=>el.remove(), 3000);
+        }
+      }
+
+      function showToast(msg) {
+        const el = document.createElement('div');
+        el.textContent=msg;
+        el.style.cssText=`position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:500; background:rgba(20,20,45,0.95); color:#fff; padding:14px 30px; border-radius:30px; font-size:1.1rem; border:1px solid rgba(168,133,250,0.6); box-shadow:0 0 30px rgba(124,58,237,0.5); animation:toastIn 0.4s, toastOut 0.4s 2.5s forwards;`;
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(), 3000);
+      }
+
+      const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      function playSound(type) {
+        if (!APP.soundEnabled) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        gain.gain.value=0.15;
+        if (type==='correct') { osc.frequency.setValueAtTime(523,audioCtx.currentTime); osc.frequency.setValueAtTime(659,audioCtx.currentTime+0.1); osc.frequency.setValueAtTime(784,audioCtx.currentTime+0.2); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4); osc.start(); osc.stop(audioCtx.currentTime+0.4); }
+        else if (type==='wrong') { osc.type='sawtooth'; osc.frequency.setValueAtTime(200,audioCtx.currentTime); osc.frequency.setValueAtTime(150,audioCtx.currentTime+0.2); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.35); osc.start(); osc.stop(audioCtx.currentTime+0.35); }
+        else if (type==='victory') { osc.frequency.setValueAtTime(523,audioCtx.currentTime); osc.frequency.setValueAtTime(659,audioCtx.currentTime+0.15); osc.frequency.setValueAtTime(784,audioCtx.currentTime+0.3); osc.frequency.setValueAtTime(1047,audioCtx.currentTime+0.45); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.7); osc.start(); osc.stop(audioCtx.currentTime+0.7); }
+      }
+
+      function toggleSound() {
+        APP.soundEnabled = !APP.soundEnabled;
+        document.getElementById('soundBtn').textContent = APP.soundEnabled ? '🔊' : '🔇';
+        saveSettings();
+      }
+
+      function toggleTheme() {
+        APP.theme = APP.theme==='dark'?'light':'dark';
+        document.documentElement.setAttribute('data-theme', APP.theme);
+        document.getElementById('themeSelect').value = APP.theme;
+        saveSettings();
+      }
+
+      function setTheme(t) {
+        APP.theme = t;
+        document.documentElement.setAttribute('data-theme', t);
+        saveSettings();
+      }
+      document.getElementById('themeSelect').value = APP.theme;
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        else document.exitFullscreen();
+      }
+
+      // Close modals on overlay click
+      document.addEventListener('click', (e) => { if (e.target.classList.contains('modal-overlay')) e.target.style.display='none'; });
+
+      // Init
+      showScreen('home');
+      refreshHostDashboard();
+    })();
+  </script>
 </body>
 </html>
